@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game of life</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400..700;1,400..700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: "Cabin", sans-serif;
+            color: white;
+        }
+    </style>
+</head>
+
+<body style="background: black;">
+
+    <h1 style="color: white;">Game of Life</h1>
+    <div style="display: flex; gap: 5px;">
+        <canvas id="canvas" style="border: 1px solid white;"></canvas> 
+        <div style="display: block; border: 1px solid white; width: 500px; height: 300px; padding: 15px;">
+            <label>Speed</label> <br>
+            <input id="fps" type="range" min="1" max="60" value="25" /> <label id="lblFps">24</label> <br>
+            <button id="btnStart" style="width: 100px; height: 50px;">START</button>
+            <button id="btnRandom" style="width: 100px; height: 50px;">RANDOM</button>
+        </div>
+    </div>
+
+    <script>
+        const SCREEN_WIDTH = 1250;
+        const SCREEN_HEIGHT = 800;
+        const CELL_WIDTH = 25;
+        const CELL_HEIGHT = 25;
+        const colCount = SCREEN_WIDTH / CELL_WIDTH;
+        const rowCount = SCREEN_HEIGHT / CELL_HEIGHT;
+
+        const canvas = document.getElementById("canvas");
+        canvas.setAttribute("width", SCREEN_WIDTH);
+        canvas.setAttribute("height", SCREEN_HEIGHT);
+        const ctx = canvas.getContext("2d");
+
+        let generation = Array(rowCount).fill(null).map(_ => Array(colCount).fill(false));
+        let newGeneration = generation;
+
+
+        let fps = 24;
+
+        canvas.onclick = (event) => {
+            const rect = canvas.getBoundingClientRect();
+            // Calculate the x and y coordinates relative to the canvas
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            generation[Math.floor(y / CELL_HEIGHT)][Math.floor(x / CELL_WIDTH)] = true;
+            draw();
+
+        }
+
+        document.getElementById("btnRandom").onclick = () => {
+            generation = Array(rowCount).fill(null).map(_ => Array(colCount).fill(false).map(_ => Math.floor(Math.random() * 3)  == 1));
+            draw();
+        }
+
+        function calculate() {
+            generation.forEach((row, y) => row.forEach((cell, x) => {
+                let aliveNeighours = 0;
+                for(let x_mod = -1; x_mod <= 1; x_mod++) {
+                    for(let y_mod = -1; y_mod <= 1; y_mod++) {
+                        if(x_mod == 0 && y_mod == 0) continue;
+                        const x1 = x + x_mod;
+                        const y1 = y + y_mod;
+                        if (x1 >= colCount || x1 < 0 || y1 >= rowCount || y1 < 0) continue;
+                        aliveNeighours += generation[y1][x1]  ? 1 : 0; 
+                    }
+                }
+                
+                newGeneration[y][x] = (cell && (aliveNeighours === 2 || aliveNeighours == 3)) || (!cell && aliveNeighours == 3);
+                
+            }));
+            generation = newGeneration;
+        }
+
+        function draw() {
+            generation.forEach((line, y) => line.forEach((cell, x) => {
+                ctx.fillStyle = cell ? "white" : "black";
+                ctx.fillRect(x * CELL_WIDTH, y * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT);
+            }));
+        }
+
+        document.getElementById("btnStart").onclick = (event) => main();
+        document.getElementById("fps").onchange = function () {
+            fps = this.value;
+            document.getElementById("lblFps").innerText = fps;
+        }
+
+        function main() {
+            draw();
+            calculate();
+            setTimeout(main, Math.floor(1000/fps));
+        }
+
+    </script>
+
+</body>
+
+</html>

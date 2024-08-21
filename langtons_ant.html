@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Langton's ant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400..700;1,400..700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: "Cabin", sans-serif;
+            color: white;
+        }
+    </style>
+</head>
+
+<body style="background: black;">
+
+
+    <h1 style="color: white;">Langton's Ant</h1>
+
+    <canvas id="canvas" width="800" height="800" />
+
+    <script>
+        const SCREEN_WIDTH = 1500;
+        const SCREEN_HEIGHT = 900;
+        const CELL_WIDTH = 10;
+        const CELL_HEIGHT = 10;
+        const colCount = SCREEN_WIDTH / CELL_WIDTH;
+        const rowCount = SCREEN_HEIGHT / CELL_HEIGHT;
+
+        const canvas = document.getElementById("canvas");
+        canvas.setAttribute("width", SCREEN_WIDTH);
+        canvas.setAttribute("height", SCREEN_HEIGHT);
+        const ctx = canvas.getContext("2d");
+
+        // const matrix = Array(rowCount).fill(null).map(_ => Array(colCount).fill(false).map(_ => Math.floor(Math.random() * 3)  == 1));
+        const matrix = Array(rowCount).fill(null).map(_ => Array(colCount).fill(true));
+        // const ant = { 
+        //     x: Math.floor(Math.random() * colCount), 
+        //     y: Math.floor(Math.random() * rowCount),
+        // };
+        const ant = {
+            x: Math.floor(colCount / 2),
+            y : Math.floor(rowCount / 2)
+        };
+        console.log(ant);
+
+        // WEST, NORTH, EAST, SOUTH
+        const movements = [[-1,0], [0,-1], [1,0], [0, 1]];
+        let currMovementIndex = 2; 
+
+        function calculate() {
+
+            cell = matrix[ant.y][ant.x];
+
+            if(cell) 
+                currMovementIndex = currMovementIndex + 1 > 3 ? 0 : currMovementIndex + 1; 
+            else 
+                currMovementIndex = currMovementIndex - 1 < 0 ? 3 : currMovementIndex - 1;
+
+            // flip the current cell and move the ant
+            matrix[ant.y][ant.x] = !cell;
+            ant.x += movements[currMovementIndex][0];
+            ant.y += movements[currMovementIndex][1];
+        }
+
+        function update() {
+            matrix.forEach((line, y) => line.forEach((cell, x) => {
+                if(x == ant.x && y == ant.y) {
+                    ctx.fillStyle = "red";
+                    ctx.fillRect(x * CELL_WIDTH, y * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT);
+                } else {
+                    ctx.fillStyle = cell ? "white" : "black";
+                    ctx.fillRect(x * CELL_WIDTH, y * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT);
+                }
+            }));
+        }
+
+        function main() {
+            calculate();
+            update();
+            setTimeout(main, 5);
+        }
+        main();
+
+    </script>
+
+</body>
+
+</html>

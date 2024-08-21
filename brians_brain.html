@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brian's Brain</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400..700;1,400..700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: "Cabin", sans-serif;
+            color: white;
+            background: black;
+        }
+    </style>
+</head>
+<body >
+    <h1 style="color: white;">Brian's brain</h1>
+    <canvas id="canvas" width="800" height="800" />
+    <script>
+        const SCREEN_WIDTH = 1500;
+        const SCREEN_HEIGHT = 900;
+        const CELL_WIDTH = 5;
+        const CELL_HEIGHT = 5;
+        const colCount = SCREEN_WIDTH / CELL_WIDTH;
+        const rowCount = SCREEN_HEIGHT / CELL_HEIGHT;
+
+        const canvas = document.getElementById("canvas");
+        canvas.setAttribute("width", SCREEN_WIDTH);
+        canvas.setAttribute("height", SCREEN_HEIGHT);
+        const ctx = canvas.getContext("2d");
+
+        const states = ["on", "dying", "off"];
+        let generation = Array(rowCount).fill(null).map(_ => Array(colCount).fill(false).map(_ =>  states[Math.floor(Math.random() * 3)]));
+        let newGeneration = generation;
+
+
+        function calculate() {
+            generation.forEach((row, y) => row.forEach((cell, x) => {
+                let aliveNeighours = 0;
+                for(let x_mod = -1; x_mod <= 1; x_mod++) {
+                    for(let y_mod = -1; y_mod <= 1; y_mod++) {
+                        if(x_mod == 0 && y_mod == 0) continue;
+                        const x1 = x + x_mod;
+                        const y1 = y + y_mod;
+                        if (x1 >= colCount || x1 < 0 || y1 >= rowCount || y1 < 0) continue;
+                        aliveNeighours += generation[y1][x1] == "on" ? 1 : 0; 
+                    }
+                }
+
+                if(cell == "off" && aliveNeighours == 2)
+                    newGeneration[y][x] = "on";
+                else if(cell == "on")
+                    newGeneration[y][x] = "dying";
+                else
+                    newGeneration[y][x] = "off"
+            }));   
+
+            generation = newGeneration;
+        }
+
+
+        const colors = {
+            "on": "white",
+            "dying": "blue",
+            "off": "black"
+        };
+        function update() {
+            generation.forEach((line, y) => line.forEach((cell, x) => {
+                ctx.fillStyle = colors[cell];
+                ctx.fillRect(x * CELL_WIDTH, y * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT);
+                
+            }));
+        }
+
+        function main() {
+            update();
+            calculate();
+            setTimeout(main, 50);
+        }
+        main();
+    </script>
+
+</body>
+</html>
