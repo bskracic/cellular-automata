@@ -21,10 +21,11 @@
 
     <h1 style="color: white;">Game of Life</h1>
     <div style="display: flex; gap: 5px;">
-        <canvas id="canvas" style="border: 1px solid white;"></canvas> 
+        <canvas id="canvas" style="border: 1px solid white;"></canvas>
         <div style="display: block; border: 1px solid white; width: 500px; height: 300px; padding: 15px;">
+            <p>Click to modify cells.</p>
             <label>Speed</label> <br>
-            <input id="fps" type="range" min="1" max="60" value="25" /> <label id="lblFps">24</label> <br>
+            <input id="fps" type="range" min="1" max="60" value="1" /> <label id="lblFps">1</label> <br>
             <button id="btnStart" style="width: 100px; height: 50px;">START</button>
             <button id="btnRandom" style="width: 100px; height: 50px;">RANDOM</button>
         </div>
@@ -33,53 +34,68 @@
     <script>
         const SCREEN_WIDTH = 1250;
         const SCREEN_HEIGHT = 800;
-        const CELL_WIDTH = 25;
-        const CELL_HEIGHT = 25;
+        const CELL_WIDTH = 10;
+        const CELL_HEIGHT = 10;
         const colCount = SCREEN_WIDTH / CELL_WIDTH;
         const rowCount = SCREEN_HEIGHT / CELL_HEIGHT;
+        let fps = 1;
 
         const canvas = document.getElementById("canvas");
         canvas.setAttribute("width", SCREEN_WIDTH);
         canvas.setAttribute("height", SCREEN_HEIGHT);
         const ctx = canvas.getContext("2d");
 
-        let generation = Array(rowCount).fill(null).map(_ => Array(colCount).fill(false));
-        let newGeneration = generation;
-
-
-        let fps = 24;
+        let generation = Array.from({length: rowCount}, () => Array.from({length: colCount}, () => false));
 
         canvas.onclick = (event) => {
             const rect = canvas.getBoundingClientRect();
-            // Calculate the x and y coordinates relative to the canvas
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
-            generation[Math.floor(y / CELL_HEIGHT)][Math.floor(x / CELL_WIDTH)] = true;
+            const i = Math.floor(x / CELL_WIDTH);
+            const j = Math.floor(y / CELL_HEIGHT);
+            generation[j][i] = !generation[j][i];
             draw();
 
         }
 
         document.getElementById("btnRandom").onclick = () => {
-            generation = Array(rowCount).fill(null).map(_ => Array(colCount).fill(false).map(_ => Math.floor(Math.random() * 3)  == 1));
+            generation = Array.from({length: rowCount}, () => Array.from({length: colCount}, () => Math.floor(Math.random() * 3) == 1));
             draw();
         }
 
         function calculate() {
-            generation.forEach((row, y) => row.forEach((cell, x) => {
-                let aliveNeighours = 0;
-                for(let x_mod = -1; x_mod <= 1; x_mod++) {
-                    for(let y_mod = -1; y_mod <= 1; y_mod++) {
-                        if(x_mod == 0 && y_mod == 0) continue;
-                        const x1 = x + x_mod;
-                        const y1 = y + y_mod;
-                        if (x1 >= colCount || x1 < 0 || y1 >= rowCount || y1 < 0) continue;
-                        aliveNeighours += generation[y1][x1]  ? 1 : 0; 
+            let newGeneration = Array.from({length: rowCount}, () => Array.from({length: colCount}, () => false));
+            for (let y = 0; y < rowCount; y++) {
+                for (let x = 0; x < colCount; x++) {
+                    let cell = generation[y][x];
+                    let aliveNeighours = 0;
+                    
+                    let checks = "";
+                    for (let x_mod = -1; x_mod <= 1; x_mod++) {
+                        for (let y_mod = -1; y_mod <= 1; y_mod++) {
+                            if (x_mod === 0 && y_mod === 0) {
+                                continue;
+                            }
+                            let x1 = x + x_mod;
+                            let y1 = y + y_mod;
+                            if (x1 >= colCount || x1 < 0 || y1 >= rowCount || y1 < 0) {
+                                continue;  
+                            } 
+                            checks += `[${x_mod}, ${y_mod}] `;
+                            if (generation[y1][x1] === true)
+                                aliveNeighours += 1;
+                        }
                     }
+                    console.log(checks);
+
+                    if (cell === true && aliveNeighours >= 2 && aliveNeighours <= 3)
+                        newGeneration[y][x] = true
+                    else if (cell === false && aliveNeighours === 3)
+                        newGeneration[y][x] = true;
+                    else
+                        newGeneration[y][x] = false;
                 }
-                
-                newGeneration[y][x] = (cell && (aliveNeighours === 2 || aliveNeighours == 3)) || (!cell && aliveNeighours == 3);
-                
-            }));
+            }
             generation = newGeneration;
         }
 
@@ -99,7 +115,7 @@
         function main() {
             draw();
             calculate();
-            setTimeout(main, Math.floor(1000/fps));
+            setTimeout(main, Math.floor(1000 / fps));
         }
 
     </script>
